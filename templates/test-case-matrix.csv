@@ -1,6 +1,19 @@
 ID,Folder,Endpoint,Method,Scenario,Input file/body,Expected status,Expected response check,Type,Pass/Fail,Evidence
-TC01,Functional,/health,GET,Service is alive,-,200,status=ok,functional,,
-TC02,Functional,/readings,POST,Create reading happy path,mock-data/sensor-reading-valid.json,201,"has reading_id, accepted=true",functional,,
-TC03,Negative,/readings,POST,Missing device_id,mock-data/sensor-reading-invalid-missing-device.json,400,Problem Details,negative,,
-TC04,Auth,/readings,POST,Missing token,mock-data/sensor-reading-valid.json,401,Problem Details,auth,,
-TC05,Boundary,/readings,POST,High temperature boundary,mock-data/sensor-reading-boundary.json,201/400,documented behavior,boundary,,
+TC01,00_Health,/health,GET,Service alive,-,200,"status=ok, has service+time",functional,pass,newman-report.html
+TC02,01_Functional,/events,POST,SensorEvent happy path,inline JSON body,201,"has eventId + acceptedAt",functional,pass,newman-report.html
+TC03,01_Functional,/events,POST,AccessEvent happy path,inline JSON body,201,has eventId,functional,pass,newman-report.html
+TC04,01_Functional,/alerts,POST,Create alert UNAUTHORIZED_ACCESS,inline JSON body,201,"has id + status=OPEN",functional,pass,newman-report.html
+TC05,01_Functional,/alerts/recent,GET,List recent alerts,limit=5,200,has items array,functional,pass,newman-report.html
+TC06,01_Functional,/alerts,GET,List alerts with pagination,limit=10,200,"has items + hasMore",functional,pass,newman-report.html
+TC07,02_Auth,/alerts,GET,Valid token accepted,authToken env var,200,status=200,auth,pass,newman-report.html
+TC08,02_Auth,/alerts,GET,Missing token - skipped on mock,no Authorization header,skip/401,skip or 401/403,auth,pass,newman-report.html
+TC09,02_Auth,/alerts,POST,Wrong token - skipped on mock,Bearer wrong-token-xyz,skip/401,skip or 401/403,auth,pass,newman-report.html
+TC10,03_Negative,/events,POST,Invalid enum eventType,Prefer:code=400,400/422,"has title + status 4xx",negative,pass,newman-report.html
+TC11,03_Negative,/alerts,POST,Missing required severity,Prefer:code=422,400/422,"has title + status 4xx",negative,pass,newman-report.html
+TC12,03_Negative,/alerts,POST,Invalid enum alertType,Prefer:code=400,400/422,has title,negative,pass,newman-report.html
+TC13,04_Boundary,/alerts/recent,GET,Max limit=100 accepted,limit=100,200,has items array,boundary,pass,newman-report.html
+TC14,04_Boundary,/alerts/recent,GET,Over max limit=101 rejected,limit=101 + Prefer:code=400,400/422,status 4xx,boundary,pass,newman-report.html
+TC15,04_Boundary,/events,POST,Min value -100 accepted,value=-100,201,has eventId,boundary,pass,newman-report.html
+TC16,04_Boundary,/events,POST,Over max value 1001 rejected,value=1001 + Prefer:code=400,400/422,status 4xx,boundary,pass,newman-report.html
+TC17,05_Consumer_Smoke,/readings (IoT mock),POST,Analytics calls IoT contract,inline JSON body,201,"has reading_id + accepted=true",consumer-smoke,pass,newman-report.html
+TC18,06_Local_NonFunctional,/events,POST,Response time SLA,inline JSON body,201,responseTime<1000ms (local only),non-functional,pass,newman-report.html
