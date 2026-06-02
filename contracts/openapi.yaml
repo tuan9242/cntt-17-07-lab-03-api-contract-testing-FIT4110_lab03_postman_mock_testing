@@ -24,6 +24,14 @@ security:
   - bearerAuth: []
 paths:
   /health:
+    head:
+      operationId: headHealth
+      summary: Kiểm tra trạng thái service bằng HEAD
+      tags: [health]
+      security: []
+      responses:
+        '200':
+          description: Service đang hoạt động
     get:
       operationId: getHealth
       summary: Kiểm tra trạng thái service
